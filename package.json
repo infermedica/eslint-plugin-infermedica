@@ -1,0 +1,22 @@
+{
+  "name": "eslint-plugin-infermedica",
+  "version": "0.1.0",
+  "author": "Infermedica",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/infermedica/eslint-plugin-infermedica.git"
+  },
+  "files": [
+    "*.js",
+    "README.md"
+  ],
+  "keywords": [
+    "eslint",
+    "eslint-plugin",
+    "eslint-config",
+    "vue",
+    "rules"
+  ]
+}
