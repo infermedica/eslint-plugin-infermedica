@@ -1,5 +1,5 @@
 // Note: This file is a minor modification of attributes-order rule avaliable in eslint-plugin-vue package
-// https://github.com/vuejs/eslint-plugin-vue/blob/master/lib/rules/attributes-order.js
+// https://github.com/vuejs/eslint-plugin-vue/blob/fc7afd7e9f492826a9a5b3255fd6d0404717dfb2/lib/rules/attributes-order.js
 /**
  * @fileoverview enforce ordering of attributes
  * @author Erin Depew
@@ -10,8 +10,13 @@
 // Rule Definition
 // ------------------------------------------------------------------------------
 
-function getAttributeType (name, isDirective) {
-  if (isDirective) {
+function getAttributeType (attribute, sourceCode) {
+  const isBind = attribute.directive && attribute.key.name.name === 'bind'
+  const name = isBind
+    ? (attribute.key.argument ? sourceCode.getText(attribute.key.argument) : '')
+    : (attribute.directive ? attribute.key.name.name : attribute.key.name)
+
+  if (attribute.directive && !isBind) {
     if (name === 'for') {
       return 'LIST_RENDERING'
     } else if (name === 'if' || name === 'else-if' || name === 'else' || name === 'show' || name === 'cloak') {
@@ -24,6 +29,8 @@ function getAttributeType (name, isDirective) {
       return 'EVENTS'
     } else if (name === 'html' || name === 'text' || name === 't') {
       return 'CONTENT'
+    } else if (name === 'slot') {
+      return 'UNIQUE'
     } else {
       return 'OTHER_DIRECTIVES'
     }
@@ -34,17 +41,14 @@ function getAttributeType (name, isDirective) {
       return 'GLOBAL'
     } else if (name === 'ref' || name === 'key' || name === 'slot' || name === 'slot-scope') {
       return 'UNIQUE'
-    } else if (name === 'class') {
-      return 'CLASSES'
     } else {
       return 'OTHER_ATTR'
     }
   }
 }
-function getPosition (attribute, attributePosition) {
-  const attributeType = attribute.directive && attribute.key.name === 'bind'
-    ? getAttributeType(attribute.key.argument, false)
-    : getAttributeType(attribute.key.name, attribute.directive)
+
+function getPosition (attribute, attributePosition, sourceCode) {
+  const attributeType = getAttributeType(attribute, sourceCode)
   return attributePosition.hasOwnProperty(attributeType) ? attributePosition[attributeType] : -1
 }
 
@@ -105,8 +109,8 @@ function create (context) {
       previousNode = null
     },
     'VAttribute' (node) {
-      if ((currentPosition === -1) || (currentPosition <= getPosition(node, attributePosition))) {
-        currentPosition = getPosition(node, attributePosition)
+      if ((currentPosition === -1) || (currentPosition <= getPosition(node, attributePosition, sourceCode))) {
+        currentPosition = getPosition(node, attributePosition, sourceCode)
         previousNode = node
       } else {
         reportIssue(node, previousNode)
@@ -120,7 +124,8 @@ module.exports = {
     type: 'problem',
     docs: {
       description: 'enforce order of attributes',
-      category: 'recommended'
+      category: 'recommended',
+      url: 'https://eslint.vuejs.org/rules/attributes-order.html'
     },
     fixable: 'code',
     schema: {
